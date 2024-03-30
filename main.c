@@ -1,83 +1,98 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <string.h>
+#include <pthread.h>
 
 #include "dblLinkedList.h"
 
-dblLinkedList *createList() {
-	dblLinkedList* tmp = (dblLinkedList*)calloc(1, sizeof(dblLinkedList));
-	if (!tmp) {
-		exit(1);
-	}
-	tmp->size = 0;
-	tmp->head = tmp->tail = NULL;
+typedef struct _Params {
+    dblLinkedList *list;
+    int bit;
+} Params;
 
-	return tmp;
+typedef struct _Returns {
+    int processed;
+    int count;
+} Returns;
+
+void *one_bits_count(void *params) {
+    Params *param_args = (Params *)params;
+    Returns *return_values = (Returns *)calloc(1, sizeof(Returns));
+    dblLinkedList *list = param_args->list;
+    
+    Node *current = list->tail;
+    while (current && list->size > 0) {
+        int *value = (int *)popBack(list);
+        while ((*value) > 0) {
+            if ((*value & 1) == param_args->bit) {
+                return_values->count += 1;
+            }
+            *value = *value >> 1;
+        }
+        return_values->processed += 1;
+    }
+    pthread_exit((void *)return_values);
 }
 
-void deleteList(dblLinkedList** list) {
-	Node* tmp = (*list)->head;
-	Node* next = NULL;
-	while (tmp) {
-		next = tmp->next;
-		free(tmp);
-		tmp = next;
-	}
-	free(*list);
-	*list = NULL;
+void *zero_bits_count(void *params) {
+    Params *param_args = (Params *)params;
+    Returns *return_values = (Returns *)calloc(1, sizeof(Returns));
+    dblLinkedList *list = param_args->list;
+    
+    Node *current = list->tail;
+    while (current && list->size > 0) {
+        int *value = (int *)popFront(list);
+        while ((*value) > 0) {
+            if ((*value & 1) == param_args->bit) {
+                return_values->count += 1;
+            }
+            *value = *value >> 1;
+        }
+        return_values->processed += 1;
+
+        // printf("{%d} ", return_values->count);
+    }
+    pthread_exit((void *)return_values);
 }
 
-void pushback(dblLinkedList** list, void* value, size_t value_size) {
-	Node* tmp = (Node*)calloc(1, sizeof(Node));
-	if (tmp == NULL) {
-		exit(2);
-	}
-
-	tmp->value = calloc(1, value_size);
-
-	memcpy(tmp->value, value, value_size);
-	tmp->prev = (*list)->tail;
-	tmp->next = NULL;
-	if ((*list)->tail != NULL) {
-		(*list)->tail->next = tmp;
-	}
-	(*list)->tail = tmp;
-	if ((*list)->head == NULL) {
-		(*list)->head = tmp;
-	}
-	(*list)->size++;
-}
-
-void printList(dblLinkedList *list, void(*print_func)(void*)) {
-	Node* tmp = list->head;
-	while (tmp) {
-		print_func(tmp->value);
-		tmp = tmp->next;
-	}
-	printf("\n");
-}
-
-void printInt(void* value) {
-	printf("%d ", *((int*)value));
-}
-
-void printDouble(void* value) {
-	printf("%lf ", *((double*)value));
-}
-
-int main() {
-	dblLinkedList* list = createList();
-	int size = 0;
-	if (scanf("%d", &size) != 1) {
-		printf("Incorrect input");
-	}
+int main(int argc, char **argv) {
+    int size;
+    if (argc != 2) {
+		printf("Всего может быть один аргумент - размер списка\n");
+        exit(1);
+    } else if ((size = atoi(argv[1])) == 0 && (*argv)[1] != '0') {
+        printf("Введите только одно число\n");
+        exit(2);
+    }
+    dblLinkedList* list = createList();
 	srand(time(NULL));
 	for (int i = 0; i < size; i++) {
 		int value = rand();
 		pushback(&list, &value, sizeof(int));
 	}
-	printList(list, printInt);
-	deleteList(&list);
-	return 0;
+	// printList(list, printInt);
+
+    pthread_t pid, pid2;
+
+    Params params = {list, 0};
+    if (pthread_create(&pid, NULL, one_bits_count, &params) != 0) {
+        printf("Thread didn't create correctly");
+        exit(5);
+    }
+    params.bit = 1;
+    if (pthread_create(&pid2, NULL, one_bits_count, &params) != 0) {
+        printf("Thread didn't create correctly");
+        exit(6);
+    }
+    void *res_first_thread, *res_second_thread;
+	pthread_join(pid, &res_first_thread);
+	pthread_join(pid2, &res_second_thread);
+    Returns* zeroes = (Returns *)res_first_thread;
+    Returns* ones = (Returns *)res_second_thread;
+
+    printf("%d %d", zeroes->count, ones->count);
+    free(res_first_thread);
+    free(res_second_thread);
+    deleteList(&list);
+    return 0;
 }
