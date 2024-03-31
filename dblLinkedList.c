@@ -4,7 +4,7 @@
 
 #include "dblLinkedList.h"
 
-dblLinkedList *createList() {
+dblLinkedList* createList() {
 	dblLinkedList* tmp = (dblLinkedList*)calloc(1, sizeof(dblLinkedList));
 	if (!tmp) {
 		printf("Память не выделилась корректно\n");
@@ -21,6 +21,7 @@ void deleteList(dblLinkedList** list) {
 	Node* next = NULL;
 	while (tmp) {
 		next = tmp->next;
+		free(tmp->value);
 		free(tmp);
 		tmp = next;
 	}
@@ -36,6 +37,10 @@ void pushback(dblLinkedList** list, void* value, size_t value_size) {
 	}
 
 	tmp->value = calloc(1, value_size);
+	if (tmp->value == NULL) {
+		printf("Память не выделилась корректно\n");
+		exit(2);
+	}
 
 	memcpy(tmp->value, value, value_size);
 	tmp->prev = (*list)->tail;
@@ -61,19 +66,20 @@ Node* getNode(dblLinkedList* list, size_t index) {
 		for (size_t i = 0; i < index && tmp; i++) {
 			tmp = tmp->next;
 		}
-	} else {
+	}
+	else {
 		tmp = list->tail;
 		for (size_t i = list->size - 1; i > index && tmp; i--) {
 			tmp = tmp->prev;
 		}
 	}
+
 	return tmp;
 }
 
-void* popBack(dblLinkedList* list) {
-	Node *tmp;
-	void *res;
-	
+void popBack(dblLinkedList* list) {
+	Node* tmp;
+
 	if (list->tail == NULL) {
 		printf("Удалять нечего");
 		exit(6);
@@ -86,16 +92,14 @@ void* popBack(dblLinkedList* list) {
 	if (tmp == list->head) {
 		list->head = NULL;
 	}
-	res = tmp->value;
 	list->size--;
+	free(tmp->value);
 	free(tmp);
-	return res;
 }
 
-void* popFront(dblLinkedList* list) {
-	Node *tmp;
-	void *res;
-	
+void popFront(dblLinkedList* list) {
+	Node* tmp;
+
 	if (list->head == NULL) {
 		printf("Удалять нечего");
 		exit(6);
@@ -108,16 +112,15 @@ void* popFront(dblLinkedList* list) {
 	if (tmp == list->tail) {
 		list->tail = NULL;
 	}
-	res = tmp->value;
 	list->size--;
+	free(tmp->value);
 	free(tmp);
-	return res;
 }
 
-void* delNode(dblLinkedList* list, size_t index) {
+void delNode(dblLinkedList* list, size_t index) {
 	Node* elm = getNode(list, index);
 	if (elm == NULL) {
-        printf("Попытка удаления несуществующего элемента"); 
+		printf("Попытка удаления несуществующего элемента");
 		exit(3);
 	}
 	if (elm->prev) {
@@ -126,22 +129,20 @@ void* delNode(dblLinkedList* list, size_t index) {
 	if (elm->next) {
 		elm->next->prev = elm->prev;
 	}
-	void *tmp = elm->value;
 	if (!elm->prev) {
 		list->head = elm->next;
 	}
 	if (!elm->next) {
 		list->tail = elm->prev;
 	}
+	free(elm->value);
 	free(elm);
 	list->size--;
-
-	return tmp;
 }
 
 //	Чтобы работало для разных типов данных, надо описать функцию печати для этих типов
 
-void printList(dblLinkedList *list, void(*print_func)(void*)) {
+void printList(dblLinkedList* list, void(*print_func)(void*)) {
 	Node* tmp = list->head;
 	while (tmp) {
 		print_func(tmp->value);

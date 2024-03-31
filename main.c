@@ -19,10 +19,12 @@ void *one_bits_count(void *params) {
     Params *param_args = (Params *)params;
     Returns *return_values = (Returns *)calloc(1, sizeof(Returns));
     dblLinkedList *list = param_args->list;
-    
-    Node *current = list->tail;
-    while (current && list->size > 0) {
-        int *value = (int *)popBack(list);
+    // if (list->tail == NULL) {
+    //     printf("Список пуст для единиц");
+    //     exit(7);
+    // }
+    while (list->tail && list->size > 0) {
+        int *value = (int *)list->tail->value;
         while ((*value) > 0) {
             if ((*value & 1) == param_args->bit) {
                 return_values->count += 1;
@@ -30,6 +32,8 @@ void *one_bits_count(void *params) {
             *value = *value >> 1;
         }
         return_values->processed += 1;
+
+        popBack(list);
     }
     pthread_exit((void *)return_values);
 }
@@ -38,10 +42,8 @@ void *zero_bits_count(void *params) {
     Params *param_args = (Params *)params;
     Returns *return_values = (Returns *)calloc(1, sizeof(Returns));
     dblLinkedList *list = param_args->list;
-    
-    Node *current = list->tail;
-    while (current && list->size > 0) {
-        int *value = (int *)popFront(list);
+    while (list->head != NULL && list->size > 0) {
+        int *value = (int *)list->head->value;
         while ((*value) > 0) {
             if ((*value & 1) == param_args->bit) {
                 return_values->count += 1;
@@ -51,14 +53,15 @@ void *zero_bits_count(void *params) {
         return_values->processed += 1;
 
         // printf("{%d} ", return_values->count);
+        popFront(list);
     }
     pthread_exit((void *)return_values);
 }
 
 int main(int argc, char **argv) {
     int size;
-    if (argc != 2) {
-		printf("Всего может быть один аргумент - размер списка\n");
+    if (argc > 5) {
+		printf("Может быть один аргумент - размер списка\n");
         exit(1);
     } else if ((size = atoi(argv[1])) == 0 && (*argv)[1] != '0') {
         printf("Введите только одно число\n");
@@ -70,29 +73,31 @@ int main(int argc, char **argv) {
 		int value = rand();
 		pushback(&list, &value, sizeof(int));
 	}
-	// printList(list, printInt);
 
-    pthread_t pid, pid2;
+    pthread_t pid;
+    pthread_t pid2;
 
     Params params = {list, 0};
-    if (pthread_create(&pid, NULL, one_bits_count, &params) != 0) {
+
+    if (pthread_create(&pid, NULL, zero_bits_count, &params) != 0) {
         printf("Thread didn't create correctly");
         exit(5);
     }
-    params.bit = 1;
+    params.bit = 0;
     if (pthread_create(&pid2, NULL, one_bits_count, &params) != 0) {
         printf("Thread didn't create correctly");
         exit(6);
     }
-    void *res_first_thread, *res_second_thread;
+    void *res_first_thread;
+    void *res_second_thread;
 	pthread_join(pid, &res_first_thread);
 	pthread_join(pid2, &res_second_thread);
     Returns* zeroes = (Returns *)res_first_thread;
     Returns* ones = (Returns *)res_second_thread;
 
-    printf("%d %d", zeroes->count, ones->count);
+    printf("Zeroes:\ncount: %d\nprocessed: %d\n\nOnes:\ncount: %d\nprocessed: %d\n", zeroes->count, zeroes->processed, ones->processed, ones->count);
     free(res_first_thread);
     free(res_second_thread);
-    deleteList(&list);
+    free(list);
     return 0;
 }

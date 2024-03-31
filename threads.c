@@ -14,14 +14,14 @@ typedef struct _Returns {
     int count;
 } Returns;
 
-Returns* zero_bits_count(void* params) {
+Returns* ones_bits_count(void* params) {
     Params* param_args = (Params*)params;
     Returns* return_values = (Returns*)calloc(1, sizeof(Returns));
     dblLinkedList* list = param_args->list;
 
-    Node* current = list->head;
+    Node *current = list->head;
     while (current && list->size > 0) {
-        int* value = (int *)delNode(list, list->size - 1);
+        int *value = (int *)current->value;
         while ((*value) > 0) {
             if ((*value & 1) == param_args->bit) {
                 return_values->count += 1;
@@ -30,10 +30,10 @@ Returns* zero_bits_count(void* params) {
         }
         return_values->processed += 1;
 
-        printf("{%d} ", return_values->count);
+        popFront(list);
+        current = list->head;
     }
     return return_values;
-    // pthread_exit((void *)return_values);
 }
 
 int main(int argc, char *argv[]) {
@@ -44,29 +44,19 @@ int main(int argc, char *argv[]) {
         printf("Введите только одно число\n");
         exit(2);
     }
-   int size = atoi(argv[1]);
+    int size = atoi(argv[1]);
     dblLinkedList* list = createList();
     srand(time(NULL));
     for (int i = 0; i < size; i++) {
         int value = rand();
         pushback(&list, &value, sizeof(int));
     }
-    printList(list, printInt);
-    // printf("_%d_\n", *(int*)(delNode(list, 3)));
 
-    // pthread_t pid;
-    // pthread_attr_t attr;
-    // pthread_attr_init(&attr);
-
-    Params params = { list, 1 };
-    // pthread_create(&pid, &attr, zero_bits_count, &params);
-    Returns* first_thread = zero_bits_count(&params);
-    // pthread_join(pid, &first_thread);
-    free(first_thread);
-    deleteList(&list);
-    return 0;
-
-    return 0;
-
-    
+    // Params params = { list, 1 };
+    // Returns* first_thread = ones_bits_count(&params);
+    // free(first_thread);
+    while (list->size > 0) {
+        popFront(list);
+    }
+    return 0;    
 }
