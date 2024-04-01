@@ -62,7 +62,6 @@ void *bits_count(void *params) {
         } else {
             param_args->start = list->tail;
         }
-        printf("нули [%d] %ld\n", i, list->size);
         int *value = (int *)param_args->start->value;
         return_values->count += count_bits_of_value(*value, param_args->bit);
         return_values->processed += 1;
