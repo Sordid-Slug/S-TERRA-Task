@@ -77,12 +77,12 @@ Node* getNode(dblLinkedList* list, size_t index) {
 	return tmp;
 }
 
-int popBack(dblLinkedList* list) {
+void popBack(dblLinkedList* list) {
 	Node* tmp;
 
 	if (list->tail == NULL) {
 		printf("Удалять нечего для popBack");
-		return 1;
+		exit(3);
 	}
 	tmp = list->tail;
 	list->tail = list->tail->prev;
@@ -99,15 +99,14 @@ int popBack(dblLinkedList* list) {
 		list->head = NULL;
 		list->tail = NULL;
 	}
-	return 0;
 }
 
-int popFront(dblLinkedList* list) {
+void popFront(dblLinkedList* list) {
 	Node* tmp;
 
 	if (list->head == NULL) {
 		printf("Удалять нечего для popBack");
-		return 1;
+		exit(3);
 	}
 	tmp = list->head;
 	list->head = list->head->next;
@@ -124,14 +123,13 @@ int popFront(dblLinkedList* list) {
 		list->head = NULL;
 		list->tail = NULL;
 	}
-	return 0;
 }
 
-int delNode(dblLinkedList* list, size_t index) {
+void delNode(dblLinkedList* list, size_t index) {
 	Node* elm = getNode(list, index);
 	if (elm == NULL) {
 		printf("Удалять нечего для popBack");
-		return 1;
+		exit(3);
 	}
 	if (elm->prev) {
 		elm->prev->next = elm->next;
@@ -148,7 +146,6 @@ int delNode(dblLinkedList* list, size_t index) {
 	__sync_fetch_and_sub(&list->size, 1);
 	free(elm->value);
 	free(elm);
-	return 0;
 }
 
 //	Чтобы работало для разных типов данных, надо описать функцию печати для этих типов
