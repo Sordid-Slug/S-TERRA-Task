@@ -52,9 +52,10 @@ int main(int argc, char *argv[]) {
         pushback(&list, &value, sizeof(int));
     }
 
-    // Params params = { list, 1 };
-    // Returns* first_thread = ones_bits_count(&params);
-    // free(first_thread);
+    Params params = { list, 1 };
+    Returns* first_thread = ones_bits_count(&params);
+    printf("%d %d\n", first_thread->count, first_thread->processed);
+    free(first_thread);
     while (list->size > 0) {
         popFront(list);
     }

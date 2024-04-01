@@ -77,12 +77,12 @@ Node* getNode(dblLinkedList* list, size_t index) {
 	return tmp;
 }
 
-void popBack(dblLinkedList* list) {
+int popBack(dblLinkedList* list) {
 	Node* tmp;
 
 	if (list->tail == NULL) {
-		printf("Удалять нечего");
-		exit(6);
+		printf("Удалять нечего для popBack");
+		return 1;
 	}
 	tmp = list->tail;
 	list->tail = list->tail->prev;
@@ -92,17 +92,22 @@ void popBack(dblLinkedList* list) {
 	if (tmp == list->head) {
 		list->head = NULL;
 	}
-	list->size--;
+	__sync_fetch_and_sub(&list->size, 1);
 	free(tmp->value);
 	free(tmp);
+	if (list->size == 0) {
+		list->head = NULL;
+		list->tail = NULL;
+	}
+	return 0;
 }
 
-void popFront(dblLinkedList* list) {
+int popFront(dblLinkedList* list) {
 	Node* tmp;
 
 	if (list->head == NULL) {
-		printf("Удалять нечего");
-		exit(6);
+		printf("Удалять нечего для popBack");
+		return 1;
 	}
 	tmp = list->head;
 	list->head = list->head->next;
@@ -112,16 +117,21 @@ void popFront(dblLinkedList* list) {
 	if (tmp == list->tail) {
 		list->tail = NULL;
 	}
-	list->size--;
+	__sync_fetch_and_sub(&list->size, 1);
 	free(tmp->value);
 	free(tmp);
+	if (list->size == 0) {
+		list->head = NULL;
+		list->tail = NULL;
+	}
+	return 0;
 }
 
-void delNode(dblLinkedList* list, size_t index) {
+int delNode(dblLinkedList* list, size_t index) {
 	Node* elm = getNode(list, index);
 	if (elm == NULL) {
-		printf("Попытка удаления несуществующего элемента");
-		exit(3);
+		printf("Удалять нечего для popBack");
+		return 1;
 	}
 	if (elm->prev) {
 		elm->prev->next = elm->next;
@@ -135,9 +145,10 @@ void delNode(dblLinkedList* list, size_t index) {
 	if (!elm->next) {
 		list->tail = elm->prev;
 	}
+	__sync_fetch_and_sub(&list->size, 1);
 	free(elm->value);
 	free(elm);
-	list->size--;
+	return 0;
 }
 
 //	Чтобы работало для разных типов данных, надо описать функцию печати для этих типов

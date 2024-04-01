@@ -17,9 +17,9 @@ dblLinkedList *createList();
 void deleteList(dblLinkedList** list);
 void pushback(dblLinkedList** list, void* value, size_t value_size);
 Node* getNode(dblLinkedList* list, size_t index);
-void delNode(dblLinkedList* list, size_t index);
-void popBack(dblLinkedList* list);
-void popFront(dblLinkedList* list);
+int delNode(dblLinkedList* list, size_t index);
+int popBack(dblLinkedList* list);
+int popFront(dblLinkedList* list);
 
 //	Чтобы работало для разных типов данных, надо описать функцию печати для этих типов, как printInt 
 

@@ -15,49 +15,46 @@ typedef struct _Returns {
     int count;
 } Returns;
 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-
 int count_bits(int value, int bit) {
     int count = 0;
     while (value > 0) {
-            if ((value & 1) == bit) {
+            if (value & 1 == bit) {
                 count += 1;
             }
             value = value >> 1;
         }
-    return count;
+    return 0;
 }
 
 void *one_bits_count(void *params) {
-    pthread_mutex_lock(&mutex);
     Params *param_args = (Params *)params;
     Returns *return_values = (Returns *)calloc(1, sizeof(Returns));
     dblLinkedList *list = param_args->list;
 
     int i = 0;
-    while (list->tail != NULL) {
+    while (list->tail != NULL && list->size > 0) {
         int *value = (int *)list->tail->value;
         return_values->count += count_bits(*value, param_args->bit);
         return_values->processed += 1;
 
+        // printf("единицы [%d] %ld\n", i, list->size);
         if (popBack(list) == 1) {
             printf("Удалять нечего для нулей\n");
             break;
         }
+        printf("единицы [%d] %ld\n", i, list->size);
         i++;
     }
-    pthread_mutex_unlock(&mutex);
     pthread_exit((void *)return_values);
 }
 
 void *zero_bits_count(void *params) {
-    pthread_mutex_lock(&mutex);
     Params *param_args = (Params *)params;
     Returns *return_values = (Returns *)calloc(1, sizeof(Returns));
     dblLinkedList *list = param_args->list;
 
     int i = 0;
-    while (list->head != NULL) {
+    while (list->head != NULL && list->size > 0) {
         int *value = (int *)list->head->value;
         while ((*value) > 0) {
             if ((*value & 1) == param_args->bit) {
@@ -66,13 +63,14 @@ void *zero_bits_count(void *params) {
             *value = *value >> 1;
         }
         return_values->processed += 1;
+        // printf("{%d} ", return_values->count);
         if (popFront(list) == 1) {
             printf("Удалять нечего для нулей\n");
             break;
         }
+        printf("нули     [%d] %ld\n", i, list->size);
         i++;
     }
-    pthread_mutex_unlock(&mutex);
     pthread_exit((void *)return_values);
 }
 
@@ -91,27 +89,18 @@ int main(int argc, char **argv) {
 		int value = rand();
 		pushback(&list, &value, sizeof(int));
 	}
+
     pthread_t pid;
     pthread_t pid2;
-    dblLinkedList* listForZeroes = createList();
-    dblLinkedList* listForOnes = createList();
 
-    listForZeroes->head = list->head;
-    listForZeroes->tail = getNode(list, list->size / 2);
-    listForZeroes->size = list->size / 2;
+    Params params = {list, 0};
 
-    listForOnes->head = getNode(list, list->size / 2 + 1);
-    listForOnes->tail = list->tail;
-    listForOnes->size = list->size % 2 > 0 ? list->size / 2 + 1 : list->size / 2;
-
-    Params paramsForZeroes = {listForZeroes, 0};
-    Params paramsForOnes = {listForOnes, 1};
-
-    if (pthread_create(&pid, NULL, zero_bits_count, &paramsForZeroes) != 0) {
+    if (pthread_create(&pid, NULL, zero_bits_count, &params) != 0) {
         printf("Thread didn't create correctly");
         exit(5);
     }
-    if (pthread_create(&pid2, NULL, one_bits_count, &paramsForOnes) != 0) {
+    params.bit = 1;
+    if (pthread_create(&pid2, NULL, one_bits_count, &params) != 0) {
         printf("Thread didn't create correctly");
         exit(6);
     }
@@ -126,7 +115,5 @@ int main(int argc, char **argv) {
     free(res_first_thread);
     free(res_second_thread);
     free(list);
-    free(listForOnes);
-    free(listForZeroes);
     return 0;
 }
