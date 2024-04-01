@@ -1,15 +1,19 @@
-all: main thread
+CC = gcc
+CFLAGS = -c -Wall -Werror -Wextra
 
-main:
-	gcc -Wall -Wextra -Werror main.c dblLinkedList.c -o main -lpthread -g
+all: main
 
-thread:
-	gcc -Wall -Wextra -Werror threads.c dblLinkedList.c -o thread -lpthread -g
+main: main.o dblLinkedList.o
+	$(CC) main.o dblLinkedList.o -o main -lpthread
+	rm -rf *.o
 
-main2:
-	gcc -Wall -Wextra -Werror main2.c dblLinkedList.c -o main2 -lpthread -g
+main.o: main.c
+	$(CC) $(CFLAGS) main.c -lpthread
+
+dblLinkedList.o: dblLinkedList.c
+	$(CC) $(CFLAGS) dblLinkedList.c
 
 rebuild: clean all
 
 clean:
-	rm -rf main thread main2
+	rm -rf main thread main2 *.o
