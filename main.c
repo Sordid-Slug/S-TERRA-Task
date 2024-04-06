@@ -30,25 +30,6 @@ int count_bits_of_value(int value, int bit) {
     return count;
 }
 
-// void *one_bits_count(void *params) {
-//     pthread_mutex_lock(&mutex);
-//     Params *param_args = (Params *)params;
-//     Returns *return_values = (Returns *)calloc(1, sizeof(Returns));
-//     dblLinkedList *list = param_args->list;
-//     int i = 0;
-//     while (list->tail != NULL && list->size > 0) {
-//         perror("единицы [%d] %ld\n", i, list->size);
-//         int *value = (int *)list->tail->value;
-//         return_values->count += count_bits(*value, param_args->bit);
-//         return_values->processed += 1;
-//
-//         param_args->deleteNodeFunc(list);
-//         i++;
-//     }
-//     pthread_mutex_unlock(&mutex);
-//     pthread_exit((void *)return_values);
-// }
-
 void *bits_count(void *params) {
     Params *param_args = (Params *)params;
     Returns *return_values = (Returns *)calloc(1, sizeof(Returns));
@@ -59,10 +40,13 @@ void *bits_count(void *params) {
     
     int i = 0;
     while (1) {
-        pthread_mutex_lock(&mutex);
+        if (pthread_mutex_lock(&mutex)) {
+            perror("мьютекс не заблокировался");
+            exit(7);
+        }
         if (list->head == 0x0 || list->tail == 0x0) {   // Я не имею ни малейшего понятия, почему, но
             pthread_mutex_unlock(&mutex);               // условие while (list->head != 0x0 && list->tail != 0x0) не всегда работает,
-            break;                                      // даже когда list->head && list->tail
+            break;                                      // даже когда list->head и list->tail равны 0x0
         }
         if (param_args->bit == 0) {
             param_args->start = list->head;
@@ -82,7 +66,7 @@ void *bits_count(void *params) {
 
 int main(int argc, char **argv) {
     int size;
-    if (argc > 5) {
+    if (argc > 2) {
 		perror("Может быть один аргумент - размер списка\n");
         exit(1);
     } else if ((size = atoi(argv[1])) == 0 && (*argv)[1] != '0') {
@@ -109,18 +93,15 @@ int main(int argc, char **argv) {
         perror("Поток не создался корректно");
         exit(6);
     }
-    void *res_first_thread;
-    void *res_second_thread;
-	pthread_join(pid, &res_first_thread);
-	pthread_join(pid2, &res_second_thread);
-    Returns* zeroes = (Returns *)res_first_thread;
-    Returns* ones = (Returns *)res_second_thread;
+    Returns* zeroes;
+    Returns* ones;
+	pthread_join(pid, (void*)&zeroes);
+	pthread_join(pid2, (void*)&ones);
 
     printf("\nZeroes:\ncount: %d\nprocessed: %d\n\nOnes:\ncount: %d\nprocessed: %d\n", zeroes->count, zeroes->processed, ones->count, ones->processed);
-    // printf("\nZeroes:\ncount: %d\nprocessed: %d\n", zeroes->count, zeroes->processed);
-    free(res_first_thread);
-    free(res_second_thread);
 
+    free(zeroes);
+    free(ones);
     free(list);
     return 0;
 }
