@@ -98,7 +98,8 @@ int main(int argc, char **argv) {
 	pthread_join(pid, (void*)&zeroes);
 	pthread_join(pid2, (void*)&ones);
 
-    printf("\nZeroes:\ncount: %d\nprocessed: %d\n\nOnes:\ncount: %d\nprocessed: %d\n", zeroes->count, zeroes->processed, ones->count, ones->processed);
+    printf("\nZeroes:\ncount: %d\nprocessed: %d\n\nOnes:\ncount: %d\nprocessed: %d\n",
+     zeroes->count, zeroes->processed, ones->count, ones->processed);
 
     free(zeroes);
     free(ones);
