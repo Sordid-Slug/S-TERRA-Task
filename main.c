@@ -8,7 +8,7 @@
 typedef struct _Params {
     dblLinkedList *list;
     int bit;
-    void(*deleteNodeFunc)(dblLinkedList *);
+    void*(*deleteNodeFunc)(dblLinkedList *);
     Node *start;
 } Params;
 
@@ -53,11 +53,10 @@ void *bits_count(void *params) {
         } else {
             param_args->start = list->tail;
         }
-        int *value = (int *)param_args->start->value;
+        int *value = (int *)param_args->deleteNodeFunc(list);
         return_values->count += count_bits_of_value(*value, param_args->bit);
         return_values->processed += 1;
-
-        param_args->deleteNodeFunc(list);
+        free(value);
         i++;
         pthread_mutex_unlock(&mutex);
     }
@@ -95,6 +94,7 @@ int main(int argc, char **argv) {
     }
     Returns* zeroes;
     Returns* ones;
+
 	pthread_join(pid, (void*)&zeroes);
 	pthread_join(pid2, (void*)&ones);
 
