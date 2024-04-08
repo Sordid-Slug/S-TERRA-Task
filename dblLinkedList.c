@@ -4,15 +4,8 @@
 
 #include "dblLinkedList.h"
 
-dblLinkedList* createList() {
-	dblLinkedList* tmp = (dblLinkedList*)calloc(1, sizeof(dblLinkedList));
-	if (!tmp) {
-		perror("Память не выделилась корректно\n");
-		exit(1);
-	}
-	tmp->head = tmp->tail = NULL;
-
-	return tmp;
+void createList(dblLinkedList *list) {
+	list->head = list->tail = NULL;
 }
 
 void deleteList(dblLinkedList** list) {
@@ -28,28 +21,28 @@ void deleteList(dblLinkedList** list) {
 	*list = NULL;
 }
 
-void pushback(dblLinkedList** list, void* value, size_t value_size) {
+void pushback(dblLinkedList* list, void* value, size_t value_size) {
 	Node* tmp = (Node*)calloc(1, sizeof(Node));
 	if (tmp == NULL) {
-		perror("Память не выделилась корректно\n");
+		printf("Память не выделилась корректно\n");
 		exit(2);
 	}
 
 	tmp->value = calloc(1, value_size);
 	if (tmp->value == NULL) {
-		perror("Память не выделилась корректно\n");
+		printf("Память не выделилась корректно\n");
 		exit(2);
 	}
 
 	memcpy(tmp->value, value, value_size);
-	tmp->prev = (*list)->tail;
+	tmp->prev = list->tail;
 	tmp->next = NULL;
-	if ((*list)->tail != NULL) {
-		(*list)->tail->next = tmp;
+	if (list->tail != NULL) {
+		list->tail->next = tmp;
 	}
-	(*list)->tail = tmp;
-	if ((*list)->head == NULL) {
-		(*list)->head = tmp;
+	list->tail = tmp;
+	if (list->head == NULL) {
+		list->head = tmp;
 	}
 }
 

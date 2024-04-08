@@ -12,9 +12,9 @@ typedef struct _dblLinkedList {
 	Node* tail;
 } dblLinkedList;
 
-dblLinkedList *createList();
+void createList();
 void deleteList(dblLinkedList** list);
-void pushback(dblLinkedList** list, void* value, size_t value_size);
+void pushback(dblLinkedList* list, void* value, size_t value_size);
 void* popBack(dblLinkedList* list);
 void* popFront(dblLinkedList* list);
 

@@ -34,14 +34,13 @@ void *bits_count(void *params) {
     Params *param_args = (Params *)params;
     Returns *return_values = (Returns *)calloc(1, sizeof(Returns));
     if (return_values == NULL) {
-        perror("Память не выделилась корректно\n");
+        printf("Память не выделилась корректно\n");
     }
     dblLinkedList *list = param_args->list;
     
-    int i = 0;
     while (1) {
         if (pthread_mutex_lock(&mutex)) {
-            perror("мьютекс не заблокировался");
+            printf("мьютекс не заблокировался");
             exit(7);
         }
         if (list->head == 0x0 || list->tail == 0x0) {   // Я не имею ни малейшего понятия, почему, но
@@ -57,7 +56,6 @@ void *bits_count(void *params) {
         return_values->count += count_bits_of_value(*value, param_args->bit);
         return_values->processed += 1;
         free(value);
-        i++;
         pthread_mutex_unlock(&mutex);
     }
     pthread_exit((void *)return_values);
@@ -65,14 +63,18 @@ void *bits_count(void *params) {
 
 int main(int argc, char **argv) {
     int size;
-    if (argc > 2) {
+    if (argc != 2) {
 		perror("Может быть один аргумент - размер списка\n");
         exit(1);
     } else if ((size = atoi(argv[1])) == 0 && (*argv)[1] != '0') {
-        perror("Введите только одно число\n");
+        perror("Введите только одно число, а не буквы\n");
         exit(2);
+    } else if (size < 0) {
+        perror("Введённый размер списка должен быть неотрицательным\n");
+        exit(8);
     }
-    dblLinkedList* list = createList();
+    dblLinkedList list;
+    createList(&list);
 	srand(time(NULL));
 	for (int i = 0; i < size; i++) {
 		int value = rand();
@@ -81,8 +83,8 @@ int main(int argc, char **argv) {
     pthread_t pid;
     pthread_t pid2;
 
-    Params paramsForZeroes = {list, 0, popFront, list->head};
-    Params paramsForOnes = {list, 1, popBack, list->tail};
+    Params paramsForZeroes = {&list, 0, popFront, list.head};
+    Params paramsForOnes = {&list, 1, popBack, list.tail};
 
     if (pthread_create(&pid, NULL, bits_count, &paramsForZeroes) != 0) {
         perror("Поток не создался корректно");
@@ -103,6 +105,5 @@ int main(int argc, char **argv) {
 
     free(zeroes);
     free(ones);
-    free(list);
     return 0;
 }
