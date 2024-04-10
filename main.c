@@ -16,9 +16,12 @@ typedef struct _Returns {
     int count;
 } Returns;
 
+int count = 0;
+
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int count_bits_of_value(int value, int bit) {
+    count += 1;
     int count = 0;
     while (value > 0) {
             if ((value & 1) == bit) {
@@ -48,9 +51,9 @@ void *bits_count(void *params) {
         }
         int *value = (int *)param_args->deleteNodeFunc(list);
         return_values->count += count_bits_of_value(*value, param_args->bit);
+        pthread_mutex_unlock(&mutex);
         return_values->processed += 1;
         free(value);
-        pthread_mutex_unlock(&mutex);
     }
     pthread_exit((void *)return_values);
 }
@@ -94,8 +97,8 @@ int main(int argc, char **argv) {
 	pthread_join(pid, (void*)&zeroes);
 	pthread_join(pid2, (void*)&ones);
 
-    printf("\nZeroes:\ncount: %d\nprocessed: %d\n\nOnes:\ncount: %d\nprocessed: %d\n",
-     zeroes->count, zeroes->processed, ones->count, ones->processed);
+    printf("\nZeroes:\ncount: %d\nprocessed: %d\n\nOnes:\ncount: %d\nprocessed: %d\n%d\n",
+     zeroes->count, zeroes->processed, ones->count, ones->processed, count);
 
     free(zeroes);
     free(ones);
